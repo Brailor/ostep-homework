@@ -31,4 +31,5 @@ A better approach would be to immediatly switch back to the process that had `io
 # 7 -l 3:0,5:100,5:100,5:100 -S SWITCH_ON_IO -I IO_RUN_IMMEDIATE
 This will be much better than #6, since we are always switiching back to P0 to issue the `io` and while we wait for that we can run P2 and P3. Resulting less time and better utilization of `cpu` and `io`.
 > Why might running a process that just com- pleted an I/O again be a good idea?
+
 This is a great question, my theory is that once a process has `io` in it, there is a good chance it will contain other `io` related instructions in it, so our best bet is to go back to it immediatly.
