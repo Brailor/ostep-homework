@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <sys/fcntl.h>
 #include <string.h>
+#include <sys/syslimits.h>
+#include <fcntl.h>
 
 int _fork()
 {
@@ -85,25 +87,62 @@ int two()
 
 void three()
 {
+    int fildes[2];
+    if (pipe(fildes) == -1)
+    {
+        fprintf(stderr, "pipe error\n");
+        exit(1);
+    };
+
     int rc = _fork();
 
     if (rc == 0)
     {
         //  child
-        printf("hello from child (pid: %d)", (int)getpid());
+
+        printf("hello\n");
+        write(fildes[1], strdup("child"), 5);
+        close(fildes[1]);
     }
     else
     {
         // parent
         // parent should wait for child to finish
         // but without using `wait`
-        fscanf(STDOUT_FILENO);
+        char *msg = NULL;
+        read(fildes[0], msg, 5);
+        close(fildes[0]);
+        printf("goodbye\n");
     }
 }
 
-int main(int argc, char *argv[])
+void four()
+{
+    int rc = _fork();
+
+    if (rc == 0)
+    {
+        // child
+        // char *exec_args[3] = {
+        //     strdup("ls"),
+        //     strdup("/Users"),
+        //     NULL};
+
+        // execvp(exec_args[0], exec_args);
+        char *string_arg = strdup("/Users");
+        execlp(strdup("ls"), string_arg);
+    }
+    else
+    {
+        // parent
+        printf("parent \n");
+    }
+}
+
+int main()
 {
     // one();
     // two();
-    three();
+    // three();
+    four();
 }
