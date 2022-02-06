@@ -7,11 +7,20 @@
 #include <sys/syslimits.h>
 #include <fcntl.h>
 
-int _fork()
+void err_exit(char *msg)
+{
+    fprintf(stderr, "%s", msg);
+    exit(1);
+}
+
+pid_t _fork()
 {
     int rc = fork();
 
-    assert(rc >= 0);
+    if (rc == -1)
+    {
+        err_exit("fork failed");
+    }
 
     return rc;
 }
@@ -138,11 +147,111 @@ void four()
         printf("parent \n");
     }
 }
+//uses `wait`, what is the return value of `wait`
+//what happens if you use `wait` inside the children?
+void five()
+{
+    int f_pid = _fork();
 
+    if (f_pid == 0)
+    {
+        //child (new process)
+        int idk = wait(NULL);
+        printf("hello from child (pid: %d)\n", (int)getpid());
+        printf("the value of `wait` inside the child process is: %d\n", idk);
+    }
+    else
+    {
+        //parent
+        int child_pid = wait(NULL);
+        printf("parent (pid: %d)\n", (int)getpid());
+        printf("the value of `wait` is: %d\n", child_pid);
+    }
+}
+
+int six()
+{
+    int f_pid = _fork();
+
+    if (f_pid == 0)
+    {
+        printf("hello from child (pid: %d)\n", (int)getpid());
+    }
+    else
+    {
+        //parent
+        int child_pid = waitpid(f_pid, NULL, 0);
+        printf("parent (pid: %d)\n", (int)getpid());
+        printf("the value of `waitpid` is: %d\n", child_pid);
+    }
+    return 0;
+}
+
+int seven()
+{
+    int f_pid = _fork();
+
+    if (f_pid == 0)
+    {
+        close(STDOUT_FILENO);
+        printf("printing from child after closing STDOUT\n");
+    }
+    else
+    {
+        printf("parent (pid: %d)\n", (int)getpid());
+    }
+
+    return 0;
+}
+
+int eight()
+{
+    int filedes[2];
+    if (pipe(filedes) == -1)
+    {
+        err_exit("pipe fail");
+    }
+    pid_t fpid1 = _fork();
+
+    if (fpid1 == 0)
+    {
+        // first child proc
+        // this proc should set its FILE STDOUT to filedes[1]
+        dup2(filedes[1], STDOUT_FILENO);
+        printf("hello from first child\n");
+    }
+    else
+    {
+        // wait for first child to attach its stdout to pipe
+        waitpid(fpid1, NULL, 0);
+        pid_t fpid2 = _fork();
+
+        if (fpid2 == 0)
+        {
+            // second child proc
+            dup2(filedes[0], STDIN_FILENO);
+            char buffer[BUFSIZ];
+            read(STDIN_FILENO, buffer, BUFSIZ);
+            printf("data read from other child process: %s", buffer);
+        }
+        else
+        {
+            // parent
+            // wait for second child
+            waitpid(fpid2, NULL, 0);
+        }
+    }
+
+    return 0;
+}
 int main()
 {
     // one();
     // two();
     // three();
-    four();
+    // four();
+    // five();
+    // six();
+    // seven();
+    eight();
 }
