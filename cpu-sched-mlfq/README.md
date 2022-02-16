@@ -1,4 +1,3 @@
-
 This program, `mlfq.py`, allows you to see how the MLFQ scheduler
 presented in this chapter behaves. As before, you can use this to generate
 problems for yourself using random seeds, or use it to construct a
@@ -13,6 +12,7 @@ Use the help flag (-h) to see the options:
 
 ```sh
 Usage: mlfq.py [options]
+
 Options:
   -h, --help            show this help message and exit
   -s SEED, --seed=SEED  the random seed
@@ -20,30 +20,38 @@ Options:
                         number of queues in MLFQ (if not using -Q)
   -q QUANTUM, --quantum=QUANTUM
                         length of time slice (if not using -Q)
+  -a ALLOTMENT, --allotment=ALLOTMENT
+                        length of allotment (if not using -A)
   -Q QUANTUMLIST, --quantumList=QUANTUMLIST
-                        length of time slice per queue level, 
-                        specified as x,y,z,... where x is the 
-                        quantum length for the highest-priority 
-                        queue, y the next highest, and so forth
+                        length of time slice per queue level, specified as
+                        x,y,z,... where x is the quantum length for the
+                        highest priority queue, y the next highest, and so
+                        forth
+  -A ALLOTMENTLIST, --allotmentList=ALLOTMENTLIST
+                        length of time allotment per queue level, specified as
+                        x,y,z,... where x is the # of time slices for the
+                        highest priority queue, y the next highest, and so
+                        forth
   -j NUMJOBS, --numJobs=NUMJOBS
                         number of jobs in the system
   -m MAXLEN, --maxlen=MAXLEN
-                        max run-time of a job (if random)
+                        max run-time of a job (if randomly generating)
   -M MAXIO, --maxio=MAXIO
-                        max I/O frequency of a job (if random)
+                        max I/O frequency of a job (if randomly generating)
   -B BOOST, --boost=BOOST
-                        how often to boost the priority of all 
-                        jobs back to high priority (0 means never)
+                        how often to boost the priority of all jobs back to
+                        high priority
   -i IOTIME, --iotime=IOTIME
                         how long an I/O should last (fixed constant)
-  -S, --stay            reset and stay at same priority level 
-                        when issuing I/O
+  -S, --stay            reset and stay at same priority level when issuing I/O
+  -I, --iobump          if specified, jobs that finished I/O move immediately
+                        to front of current queue
   -l JLIST, --jlist=JLIST
-                        a comma-separated list of jobs to run, 
-                        in the form x1,y1,z1:x2,y2,z2:... where 
-                        x is start time, y is run time, and z 
-                        is how often the job issues an I/O request
+                        a comma-separated list of jobs to run, in the form
+                        x1,y1,z1:x2,y2,z2:... where x is start time, y is run
+                        time, and z is how often the job issues an I/O request
   -c                    compute answers for me
+  --silent              whether to print the runtime of jobs
 ```
 
 There are a few different ways to use the simulator. One way is to generate
@@ -124,8 +132,8 @@ scheduler decided to do. In this example, it begins by running Job 0 for 7 ms
 until Job 0 issues an I/O; this is entirely predictable, as Job 0's I/O
 frequency is set to 7 ms, meaning that every 7 ms it runs, it will issue an
 I/O and wait for it to complete before continuing. At that point, the
-scheduler switches to Job 1, which only runs 2 ms before issuing an I/O. 
-The scheduler prints the entire execution trace in this manner, and 
+scheduler switches to Job 1, which only runs 2 ms before issuing an I/O.
+The scheduler prints the entire execution trace in this manner, and
 finally also computes the response and turnaround times for each job
 as well as an average.
 
@@ -141,7 +149,7 @@ low-priority queue a 30-ms time slice.
 You can separately control how much time allotment there is per queue
 too. This can be set for all queues with -a, or per queue with -A, e.g., -A
 20,40,60 sets the time allotment per queue to 20ms, 40ms, and 60ms,
-respectively. 
+respectively.
 
 If you are randomly generating jobs, you can also control how long they might
 run for (-m), or how often they generate I/O (-M). If you, however, want more
@@ -166,22 +174,24 @@ only 20 ms of CPU time to complete, and also never issues I/Os.
 
 Finally, there are three more parameters of interest. The -B flag, if set to a
 non-zero value, boosts all jobs to the highest-priority queue every N
-milliseconds, when invoked as such: 
+milliseconds, when invoked as such:
+
 ```sh
   prompt> ./mlfq.py -B N
 ```
+
 The scheduler uses this feature to avoid starvation as discussed in the
 chapter. However, it is off by default.
 
 The -S flag invokes older Rules 4a and 4b, which means that if a job issues an
 I/O before completing its time slice, it will return to that same priority
-queue when it resumes execution, with its full time-slice intact.  This
+queue when it resumes execution, with its full time-slice intact. This
 enables gaming of the scheduler.
 
 Finally, you can easily change how long an I/O lasts by using the -i flag. By
 default in this simplistic model, each I/O takes a fixed amount of time of 5
-milliseconds or whatever you set it to with this flag. 
+milliseconds or whatever you set it to with this flag.
 
 You can also play around with whether jobs that just complete an I/O are moved
 to the head of the queue they are in or to the back, with the -I flag. Check
-it out, it's fun! 
+it out, it's fun!

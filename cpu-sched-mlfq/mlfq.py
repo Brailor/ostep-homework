@@ -82,11 +82,11 @@ parser.add_option('-l', '--jlist', default='',
                   action='store', type='string', dest='jlist')
 parser.add_option('-c', help='compute answers for me', action='store_true',
                   default=False, dest='solve')
+parser.add_option('--silent', default=False, help='whether to print the runtime of jobs', action='store_true', dest='silent')
 
 (options, args) = parser.parse_args()
 
 random.seed(options.seed)
-
 # MLFQ: How Many Queues
 numQueues = options.numQueues
 
@@ -230,7 +230,8 @@ while finishedJobs < totalJobs:
     # check for priority boost
     if options.boost > 0 and currTime != 0:
         if currTime % options.boost == 0:
-            print('[ time %d ] BOOST ( every %d )' % (currTime, options.boost))
+            if not options.silent:
+                print('[ time %d ] BOOST ( every %d )' % (currTime, options.boost))
             # remove all jobs from queues (except high queue) and put them in high queue
             for q in range(numQueues-1):
                 for j in queue[q]:
@@ -246,7 +247,7 @@ while finishedJobs < totalJobs:
                 if job[j]['timeLeft'] > 0:
                     # print('-> FinalBoost %d (timeLeft %d)' % (j, job[j]['timeLeft']))
                     job[j]['currPri']   = hiQueue
-                    job[j]['ticksLeft'] = allotment[hiQueue]
+                    job[j]['ticksLeft'] = quantum[hiQueue]
             # print('BOOST END: QUEUES look like:', queue)
 
     # check for any I/Os done
@@ -254,7 +255,9 @@ while finishedJobs < totalJobs:
         for (j, type) in ioDone[currTime]:
             q = job[j]['currPri']
             job[j]['doingIO'] = False
-            print('[ time %d ] %s by JOB %d' % (currTime, type, j))
+            
+            if not options.silent:
+                print('[ time %d ] %s by JOB %d' % (currTime, type, j))
             if options.iobump == False or type == 'JOB BEGINS':
                 queue[q].append(j)
             else:
@@ -263,7 +266,9 @@ while finishedJobs < totalJobs:
     # now find the highest priority job
     currQueue = FindQueue()
     if currQueue == -1:
-        print('[ time %d ] IDLE' % (currTime))
+
+        if not options.silent:
+            print('[ time %d ] IDLE' % (currTime))
         currTime += 1
         continue
             
@@ -284,8 +289,10 @@ while finishedJobs < totalJobs:
     allotLeft = job[currJob]['allotLeft']
     timeLeft  = job[currJob]['timeLeft']
 
-    print('[ time %d ] Run JOB %d at PRIORITY %d [ TICKS %d ALLOT %d TIME %d (of %d) ]' % \
-          (currTime, currJob, currQueue, ticksLeft, allotLeft, timeLeft, runTime))
+
+    if not options.silent:
+        print('[ time %d ] Run JOB %d at PRIORITY %d [ TICKS %d ALLOT %d TIME %d (of %d) ]' % \
+              (currTime, currJob, currQueue, ticksLeft, allotLeft, timeLeft, runTime))
 
     if timeLeft < 0:
         Abort('Error: should never have less than 0 time left to run')
@@ -296,7 +303,9 @@ while finishedJobs < totalJobs:
 
     # CHECK FOR JOB ENDING
     if timeLeft == 0:
-        print('[ time %d ] FINISHED JOB %d' % (currTime, currJob))
+
+        if not options.silent:
+            print('[ time %d ] FINISHED JOB %d' % (currTime, currJob))
         finishedJobs += 1
         job[currJob]['endTime'] = currTime
         # print('BEFORE POP', queue)
@@ -309,7 +318,9 @@ while finishedJobs < totalJobs:
     issuedIO = False
     if ioFreq > 0 and (((runTime - timeLeft) % ioFreq) == 0):
         # time for an IO!
-        print('[ time %d ] IO_START by JOB %d' % (currTime, currJob))
+
+        if not options.silent:
+            print('[ time %d ] IO_START by JOB %d' % (currTime, currJob))
         issuedIO = True
         desched = queue[currQueue].pop(0)
         assert(desched == currJob)
@@ -322,7 +333,8 @@ while finishedJobs < totalJobs:
         futureTime = currTime + ioTime
         if futureTime not in ioDone:
             ioDone[futureTime] = []
-        print('IO DONE')
+        if not options.silent:
+            print('IO DONE')
         ioDone[futureTime].append((currJob, 'IO_DONE'))
         
     # CHECK FOR QUANTUM ENDING AT THIS LEVEL (BUT REMEMBER, THERE STILL MAY BE ALLOTMENT LEFT)
