@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import sys
@@ -38,7 +38,7 @@ def convert(size):
 #
 parser = OptionParser()
 parser.add_option('-A', '--addresses', default='-1',
-                  help='a set of comma-separated pages to access; -1 means randomly generate', 
+                  help='a set of comma-separated pages to access; -1 means randomly generate',
                   action='store', type='string', dest='addresses')
 parser.add_option('-s', '--seed',    default=0,     help='the random seed',                               action='store', type='int', dest='seed')
 parser.add_option('-a', '--asize',   default='16k', help='address space size (e.g., 16, 64k, 32m, 1g)',   action='store', type='string', dest='asize')
@@ -86,7 +86,7 @@ if psize >= convert('1g') or asize >= convert('1g'):
 mustbemultipleof(asize, pagesize, 'address space must be a multiple of the pagesize')
 mustbemultipleof(psize, pagesize, 'physical memory must be a multiple of the pagesize')
 
-# print some useful info, like the darn page table 
+# print some useful info, like the darn page table
 pages = int(psize / pagesize);
 import array
 used = array.array('i')

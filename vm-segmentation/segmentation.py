@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 from __future__ import print_function
 import sys
@@ -108,7 +108,7 @@ else:
 
 abort_if(psize < base0 + len0 - 1, 'seg0 is not in physical memory')
 abort_if(psize < base1, 'seg1 is not in physical memory')
-    
+
 abort_if(len0 > asize/2.0, 'length0 register is too large for this address space')
 abort_if(len1 > asize/2.0, 'length1 register is too large for this address space')
 
